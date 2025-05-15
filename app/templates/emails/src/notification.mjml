@@ -3,23 +3,23 @@
     <mj-section background-color="#ffffff" padding="40px 20px">
       <mj-column vertical-align="middle" width="100%">
         <mj-text align="center" padding="35px" font-size="20px" font-family="Arial, Helvetica, sans-serif" color="#333333">
-          {{ project_name }} - OTP Verification
+          {{ project_name }} - Reminder
         </mj-text>
         <mj-text align="center" font-size="16px" padding-left="25px" padding-right="25px" font-family="Arial, Helvetica, sans-serif" color="#555555">
           <span>Hello {{ email }}</span>
         </mj-text>
         <mj-text align="center" font-size="16px" padding-left="25px" padding-right="25px" font-family="Arial, Helvetica, sans-serif" color="#555555">
-          Your OTP code is:
+          Your link is:
         </mj-text>
         <mj-text align="center" font-size="24px" font-family="Arial, Helvetica, sans-serif" color="#333333" padding="15px 30px">
-          <strong>{{ otp_code }}</strong>
+          <strong>{{ link }}</strong>
         </mj-text>
         <mj-text align="center" font-size="16px" padding-left="25px" padding-right="25px" font-family="Arial, Helvetica, sans-serif" color="#555555">
-          This OTP code will expire in {{ valid_minutes }} minutes.
+          Thank you.
         </mj-text>
         <mj-divider border-color="#cccccc" border-width="2px"></mj-divider>
         <mj-text align="center" font-size="14px" padding-left="25px" padding-right="25px" font-family="Arial, Helvetica, sans-serif" color="#555555">
-          If you didn't request an OTP, you can disregard this email.
+          If you didn't use our service, you can disregard this email.
         </mj-text>
       </mj-column>
     </mj-section>

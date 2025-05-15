@@ -1,0 +1,108 @@
+<!-- Professional, modern landing page for image annotation upload -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIPELINE | Image Annotation</title>
+    <link href="https://fonts.googleapis.com/css?family=Inter:400,600,700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(120deg, #f8fafc 0%, #e0e7ef 100%);
+            font-family: 'Inter', Arial, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 420px;
+            margin: 60px auto;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 8px 32px rgba(60, 72, 100, 0.12);
+            padding: 2.5rem 2rem 2rem 2rem;
+        }
+        h1 {
+            text-align: center;
+            font-weight: 700;
+            color: #1a2236;
+            margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+        }
+        p {
+            text-align: center;
+            color: #5a6270;
+            margin-bottom: 2rem;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+        label {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.3rem;
+        }
+        input[type="file"] {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0.7rem 0.5rem;
+            background: #f7fafc;
+        }
+        input[type="email"] {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0.7rem 0.5rem;
+            font-size: 1rem;
+            background: #f7fafc;
+        }
+        button {
+            background: linear-gradient(90deg, #009688 0%, #43cea2 100%);
+            color: #fff;
+            font-weight: 700;
+            border: none;
+            border-radius: 8px;
+            padding: 0.9rem 0;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 0.5rem;
+        }
+        button:hover {
+            background: linear-gradient(90deg, #43cea2 0%, #009688 100%);
+        }
+        .footer {
+            text-align: center;
+            color: #b0b7c3;
+            font-size: 0.95rem;
+            margin-top: 2.5rem;
+        }
+        @media (max-width: 600px) {
+            .container {
+                margin: 24px 8px;
+                padding: 1.2rem 0.7rem 1.5rem 0.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PIPELINE</h1>
+        <p>Upload an image and enter your email to get notified when your annotation is ready.</p>
+        <form method="post" action="/annotate" enctype="multipart/form-data">
+            <div>
+                <label for="file">Select Image</label>
+                <input type="file" id="file" name="file" accept="image/*" required>
+            </div>
+            <div>
+                <label for="email">Your Email</label>
+                <input type="email" id="email" name="email" placeholder="you@email.com" required>
+            </div>
+            <button type="submit">Upload & Annotate</button>
+        </form>
+    </div>
+    <div class="footer">
+        &copy; {{ year or 2025 }} PIPELINE. All rights reserved.
+    </div>
+</body>
+</html>

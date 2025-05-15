@@ -19,7 +19,7 @@ class EmailData:
     subject: str
 
 
-async def render_email_template(*, template_name: str, context: dict[str, Any]) -> str:
+def render_email_template(*, template_name: str, context: dict[str, Any]) -> str:
     template_str = (
         Path(__file__).parent / "templates" / "emails" / "build" / template_name
     ).read_text()
@@ -72,7 +72,7 @@ async def send_email(
 def generate_reminder_email(email_to: str, link: str) -> EmailData:
     project_name = settings.PROJECT_NAME
     subject = f"{project_name} - Reminder"
-    html_content = await render_email_template(
+    html_content = render_email_template(
         template_name="reminder.html",
         context={"project_name": settings.PROJECT_NAME, "link": link, "email": email_to},
     )

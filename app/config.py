@@ -1,6 +1,6 @@
 from pydantic_settings import BaseSettings
-from pydantic import model_validator, BeforeValidator, AnyUrl
-from typing import Self, Any, Annotated
+from pydantic import model_validator, BeforeValidator, AnyUrl, computed_field
+from typing import Self, Any, Annotated, List
 
 def parse_cors(v: Any) -> list[str] | str:
     if isinstance(v, str) and not v.startswith("["):
@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "PIPELINE"
     FRONTEND_HOST: str = "http://localhost:3000"
     BACKEND_HOST: str = "http://localhost:8000"
+    SECRET_KEY: str
 
     BACKEND_CORS_ORIGINS: Annotated[
         list[AnyUrl] | str, BeforeValidator(parse_cors)
@@ -24,6 +25,8 @@ class Settings(BaseSettings):
         return [str(origin).rstrip("/") for origin in self.BACKEND_CORS_ORIGINS] + [
             self.FRONTEND_HOST
         ]
+    
+    DATABASE_URL: str
 
     # Email Settings (for notifications)
     SMTP_TLS: bool = True
@@ -51,6 +54,18 @@ class Settings(BaseSettings):
     REDIS_DB: int
     REDIS_URL: str
 
+    MAX_UPLOAD_SIZE: int = 2097152
+    ALLOWED_UPLOAD_EXTENSIONS: List[str] = [".jpg", ".jpeg", ".png"]
+
+    CLOUDINARY_CLOUD_NAME: str
+    CLOUDINARY_API_KEY: str
+    CLOUDINARY_API_SECRET: str
+
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_DB: str
+
+    OLLAMA_BASE_URL:str
 
     class Config:
         case_sensitive = True

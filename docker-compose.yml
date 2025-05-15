@@ -1,6 +1,6 @@
 services:
   redis:
-    image: redis
+    image: redis:7
     ports:
       - "6379:6379"
   redis-container:
@@ -9,3 +9,55 @@ services:
       - "8081:8081"
     environment:
       - REDIS_HOSTS=local:redis:6379
+
+  db:
+    image: postgres:12
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+    volumes:
+      - app-db-data:/var/lib/postgresql/data/pgdata
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
+      - POSTGRES_USER=${POSTGRES_USER?Variable not set}
+      - POSTGRES_DB=${POSTGRES_DB?Variable not set}
+
+  backend:
+    build:
+      context: .
+      dockerfile: dockerfile
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - .env
+
+  celeryworker:
+    build:
+      context: .
+      dockerfile: dockerfile
+    command: celery -A app.tasks.celery worker --loglevel=info
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - .env
+
+volumes:
+  app-db-data:

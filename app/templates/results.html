@@ -1,0 +1,110 @@
+<!-- Sleek results page for annotation status and result -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Annotation Result | PIPELINE</title>
+    <link href="https://fonts.googleapis.com/css?family=Inter:400,600,700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(120deg, #f8fafc 0%, #e0e7ef 100%);
+            font-family: 'Inter', Arial, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 520px;
+            margin: 60px auto;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 8px 32px rgba(60, 72, 100, 0.12);
+            padding: 2.5rem 2rem 2rem 2rem;
+        }
+        h1 {
+            text-align: center;
+            font-weight: 700;
+            color: #1a2236;
+            margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+        }
+        .status {
+            text-align: center;
+            font-size: 1.1rem;
+            color: #009688;
+            margin-bottom: 1.5rem;
+        }
+        .annotation {
+            background: #f7fafc;
+            border-radius: 10px;
+            padding: 1.2rem 1rem;
+            color: #2d3748;
+            font-size: 1.08rem;
+            margin-bottom: 1.5rem;
+            word-break: break-word;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            color: #009688;
+            font-weight: 600;
+            text-decoration: none;
+            margin-top: 1.5rem;
+            transition: color 0.2s;
+        }
+        .back-link:hover {
+            color: #43cea2;
+        }
+        .footer {
+            text-align: center;
+            color: #b0b7c3;
+            font-size: 0.95rem;
+            margin-top: 2.5rem;
+        }
+        @media (max-width: 600px) {
+            .container {
+                margin: 24px 8px;
+                padding: 1.2rem 0.7rem 1.5rem 0.7rem;
+            }
+        }
+    </style>
+    <script>
+        // Optionally poll for annotation result (AJAX)
+        async function pollResult() {
+            const annotationBox = document.getElementById('annotation-box');
+            const statusBox = document.getElementById('status-box');
+            try {
+                const resp = await fetch(`/api/results/{{ id }}`);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data.annotation) {
+                        annotationBox.textContent = data.annotation;
+                        statusBox.textContent = 'Annotation complete!';
+                        statusBox.style.color = '#43cea2';
+                    } else {
+                        setTimeout(pollResult, 2000);
+                    }
+                } else {
+                    setTimeout(pollResult, 3000);
+                }
+            } catch {
+                setTimeout(pollResult, 4000);
+            }
+        }
+        window.onload = function() {
+            pollResult();
+        };
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Annotation Result</h1>
+        <div id="status-box" class="status">Processing your image, please wait...</div>
+        <div id="annotation-box" class="annotation">&nbsp;</div>
+        <a href="/" class="back-link">&larr; Back to Upload</a>
+    </div>
+    <div class="footer">
+        &copy; {{ year or 2025 }} PIPELINE. All rights reserved.
+    </div>
+</body>
+</html>
