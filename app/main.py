@@ -62,34 +62,14 @@ def main(request: Request) -> HTMLResponse:
 def results(id: str) -> HTMLResponse:
     return templates.TemplateResponse("results.html", context={"id": id})
 
+
 prompt = "What's in this image?"
-
-# @app.post("/annotate")
-# async def annotate(file: UploadFile, db: SessionDep, email: str = Body(...)) -> JSONResponse:
-#     """receives base64 string, processes it and returns the annotation."""
-#     file_bytes = await file.read()
-#     filename = file.filename if file.filename else ""
-#     img_b64: str = encode_to_base64_string(file_bytes)
-#     image_url: str = f"data:image/jpeg;base64,{img_b64}"
-
-#     if is_valid_email(email):
-#         result = start_invocation_flow(prompt, image_url, email)
-#     else:
-#         result = invoke_llm.delay(prompt, image_url)
-
-#     task_id = result.id
-
-#     upload_flow(file_bytes=file_bytes, filename=filename, task_id=task_id)
-
-#     response: dict[str, Any] = {"message": "Annotation in progress", "id": task_id}
-#     return JSONResponse(response)
 
 
 @app.post("/annotate")
-async def annotate(file: UploadFile, email: str = Body(...), prompt: str = Body(...)) -> JSONResponse:
+async def annotate(file: UploadFile, email: str = Body(...)) -> JSONResponse:
     file_bytes = await file.read()
     filename = file.filename or ""
-    # task_id = str(uuid.uuid4())
 
     result = full_annotation_flow(file_bytes, filename, prompt, email=email)
     response = {"message": "Annotation in progress", "id": result.id}
