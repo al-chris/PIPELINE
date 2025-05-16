@@ -73,10 +73,14 @@
         async function pollResult() {
             const annotationBox = document.getElementById('annotation-box');
             const statusBox = document.getElementById('status-box');
+            const imageBox = document.getElementById('image-box');
             try {
                 const resp = await fetch(`/api/results/{{ id }}`);
                 if (resp.ok) {
                     const data = await resp.json();
+                    if (data.file_url) {
+                        imageBox.innerHTML = `<img src="${data.file_url}" alt="Uploaded Image" style="max-width:100%;border-radius:10px;box-shadow:0 2px 8px #0001;">`;
+                    }
                     if (data.annotation) {
                         annotationBox.textContent = data.annotation;
                         statusBox.textContent = 'Annotation complete!';
@@ -100,6 +104,7 @@
     <div class="container">
         <h1>Annotation Result</h1>
         <div id="status-box" class="status">Processing your image, please wait...</div>
+        <div id="image-box" style="text-align:center; margin-bottom:1.5rem;"></div>
         <div id="annotation-box" class="annotation">&nbsp;</div>
         <a href="/" class="back-link">&larr; Back to Upload</a>
     </div>

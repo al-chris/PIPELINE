@@ -3,7 +3,7 @@ import time
 import base64
 import asyncio
 import requests
-from sqlmodel import select
+from sqlmodel import select, Session
 from celery import Celery, Task
 from typing import Any
 from app.file import upload_picture_to_cloudinary
@@ -12,7 +12,7 @@ from app.config import settings
 from app.email import send_email, generate_reminder_email
 from langchain_ollama import ChatOllama
 from langchain_core.messages import HumanMessage, BaseMessage
-from sqlalchemy.ext.asyncio import AsyncSession
+# from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 
 celery = Celery(
@@ -29,17 +29,17 @@ def upload_to_cloudinary_task(self: Task, file_bytes: bytes, filename: str, task
 
 @celery.task(bind=True)
 def db_commit_file_annotation(self: Task, prev: dict[str, Any]) -> dict[str, Any]:
-    async def _commit():
-        async with AsyncSession(engine) as session:
-            db_obj = FileAnnotation(
-                task_id=prev["task_id"],
-                file_url=prev["file_url"],
-                annotation=None
-            )
-            session.add(db_obj)
-            await session.commit()
-        return prev
-    return asyncio.run(_commit())
+    # async def _commit():
+    with Session(engine) as session:
+        db_obj = FileAnnotation(
+            task_id=prev["task_id"],
+            file_url=prev["file_url"],
+            annotation=None
+        )
+        session.add(db_obj)
+        session.commit()
+    return prev
+    # return asyncio.run(_commit())
 
 vlm = ChatOllama(model="moondream:v2", base_url=settings.OLLAMA_BASE_URL)
 
@@ -82,22 +82,22 @@ def invoke_llm(self: Task, prev: dict[str, Any], prompt: str) -> dict[str, Any]:
 
 @celery.task(bind=True)
 def update_file_annotation(self: Task, prev: dict[str, Any]) -> dict[str, Any]:
-    async def _update():
-        async with AsyncSession(engine) as session:
-            stmt = select(FileAnnotation).where(FileAnnotation.task_id == prev["task_id"])
-            result = await session.execute(stmt)
-            file = result.scalar_one_or_none()
-            if file is None:
-                raise ValueError(f"No FileAnnotation found for task {prev['task_id']}")
-            file.sqlmodel_update({"annotation": prev["annotation"].get("content")})
-            await session.commit()
-        return prev
-    return asyncio.run(_update())
+    # async def _update():
+    with Session(engine) as session:
+        stmt = select(FileAnnotation).where(FileAnnotation.task_id == prev["task_id"])
+        result = session.exec(stmt)
+        file = result.first()
+        if file is None:
+            raise ValueError(f"No FileAnnotation found for task {prev['task_id']}")
+        file.sqlmodel_update({"annotation": prev["annotation"].get("content")})
+        session.commit()
+    return prev
+    # return asyncio.run(_update())
 
 @celery.task(bind=True)
 def send_email_task(self: Task, prev: dict[str, Any], email: str) -> str:
     async def _send():
-        link = f"{settings.FRONTEND_HOST}/{prev['task_id']}"
+        link = f"{settings.FRONTEND_HOST}/results/{prev['task_id']}"
         content = generate_reminder_email(email_to=email, link=link)
         await send_email(
             email_to=email,

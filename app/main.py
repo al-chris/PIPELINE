@@ -10,8 +10,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from app.config import settings
 from app.tasks import full_annotation_flow
-from app.db import create_db_and_tables
 from app.logging import logger
+from app.db import FileAnnotation, engine
+from sqlmodel import select, Session
 
 redis = Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB)
 
@@ -36,11 +37,11 @@ def encode_to_base64_string(image: Union[bytes, bytearray, memoryview]) -> str:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Initializing application")
-    try:
-        await create_db_and_tables()
-    except Exception as e:
-        logger.error(f"Failed to initialize the database: {e}")
-        raise
+    # try:
+    #     await create_db_and_tables()
+    # except Exception as e:
+    #     logger.error(f"Failed to initialize the database: {e}")
+    #     raise
     yield
     logger.info("Shutting down application")
 
@@ -59,8 +60,8 @@ def main(request: Request) -> HTMLResponse:
     return templates.TemplateResponse("index.html", {"request": request})
 
 @app.get("/results/{id}")
-def results(id: str) -> HTMLResponse:
-    return templates.TemplateResponse("results.html", context={"id": id})
+def results(id: str, request: Request) -> HTMLResponse:
+    return templates.TemplateResponse("results.html", context={"request": request, "id": id})
 
 
 prompt = "What's in this image?"
@@ -74,3 +75,16 @@ async def annotate(file: UploadFile, email: str = Body(...)) -> JSONResponse:
     result = full_annotation_flow(file_bytes, filename, prompt, email=email)
     response = {"message": "Annotation in progress", "id": result.id}
     return JSONResponse(response)
+
+
+@app.get("/api/results/{id}")
+def api_results(id: str):
+    with Session(engine) as session:
+        stmt = select(FileAnnotation).where(FileAnnotation.task_id == id)
+        result = session.exec(stmt).first()
+        if not result:
+            return JSONResponse({"annotation": None, "file_url": None}, status_code=404)
+        return JSONResponse({
+            "annotation": result.annotation,
+            "file_url": result.file_url
+        })

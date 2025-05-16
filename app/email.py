@@ -21,7 +21,7 @@ class EmailData:
 
 def render_email_template(*, template_name: str, context: dict[str, Any]) -> str:
     template_str = (
-        Path(__file__) / "templates" / "emails" / "build" / template_name
+        Path(__file__).parent / "templates" / "emails" / "build" / template_name
     ).read_text()
     html_content = Template(template_str).render(context)
     return html_content
@@ -33,7 +33,7 @@ async def send_email(
     subject: str = "",
     html_content: str = "",
 ) -> None:
-    assert settings.emails_enabled, "no provided configuration for email variables"
+    # assert settings.emails_enabled, "no provided configuration for email variables"
     try:
         message = emails.Message(
             subject=subject,
@@ -43,7 +43,7 @@ async def send_email(
         smtp_options: dict[str, Any] = {
             "host": settings.SMTP_HOST,
             "port": settings.SMTP_PORT,
-            "debug": True  # Add this to get detailed SMTP communication logs
+            "debug": False  # Add this to get detailed SMTP communication logs
         }
         if settings.SMTP_TLS:
             smtp_options["tls"] = True
@@ -73,7 +73,7 @@ def generate_reminder_email(email_to: str, link: str) -> EmailData:
     project_name = settings.PROJECT_NAME
     subject = f"{project_name} - Reminder"
     html_content = render_email_template(
-        template_name="reminder.html",
+        template_name="notification.html",
         context={"project_name": settings.PROJECT_NAME, "link": link, "email": email_to},
     )
     return EmailData(html_content=html_content, subject=subject)
