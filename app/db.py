@@ -21,22 +21,13 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 SessionDep = Annotated[AsyncSession, Depends(get_db)]
 
-async def get_async_session() -> AsyncSession:
-    """
-    Drive the FastAPI get_db() generator one step and return the AsyncSession.
-    """
-    async for session in get_db():  
-        return session
-    raise RuntimeError("Could not get DB session")
 
 # make sure all SQLModel models are imported (app.models) before initializing DB
 # otherwise, SQLModel might fail to initialize relationships properly
 # for more details: https://github.com/fastapi/full-stack-fastapi-template/issues/28
 
-def create_db_and_tables():
+async def create_db_and_tables():
     logger.info("Creating database tables")
-    SQLModel.metadata.create_all(engine) # type: ignore
+    async with engine.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.create_all)
     logger.info("Database tables created")
-
-def init_db():
-    create_db_and_tables()
