@@ -2,11 +2,13 @@ from cloudinary.uploader import upload # type: ignore
 from app.logging import logger
 from fastapi import HTTPException
 from app.config import settings
+import os
 
 
 async def upload_to_cloudinary_bytes(file_content: bytes, filename: str, folder_path: str, resource_type: str):
     """Upload the media file to Cloudinary given file bytes and metadata."""
     try:
+        name_without_ext = os.path.splitext(filename)[0]
         logger.info(f"Uploading {filename} to Cloudinary...")
         logger.info(f"Folder path: {folder_path}")
         logger.info(f"File content size: {len(file_content)} bytes")
@@ -15,7 +17,7 @@ async def upload_to_cloudinary_bytes(file_content: bytes, filename: str, folder_
         result = upload(
             file=file_content,
             resource_type=resource_type,
-            public_id=filename,
+            public_id=name_without_ext,
             folder=folder_path,
             format="jpg"
         )
