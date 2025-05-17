@@ -1,19 +1,18 @@
 import re
 import time
+import uuid
 import base64
 import asyncio
 import requests
-from sqlmodel import select, Session
-from celery import Celery, Task
 from typing import Any
-from app.file import upload_picture_to_cloudinary
-from app.db import engine, FileAnnotation
-from app.config import settings
-from app.email import send_email, generate_reminder_email
+from celery import Celery
+from sqlmodel import select, Session
 from langchain_ollama import ChatOllama
 from langchain_core.messages import HumanMessage, BaseMessage
-# from sqlalchemy.ext.asyncio import AsyncSession
-import uuid
+from app.config import settings
+from app.db import engine, FileAnnotation
+from app.file import upload_picture_to_cloudinary
+from app.email import send_email, generate_reminder_email
 
 celery = Celery(
     "tasks",
@@ -22,14 +21,13 @@ celery = Celery(
 )
 celery.autodiscover_tasks(['app.tasks', 'app.main'])
 
-@celery.task(bind=True)
-def upload_to_cloudinary_task(self: Task, file_bytes: bytes, filename: str, task_id: str) -> dict[str, Any]:
+@celery.task()
+def upload_to_cloudinary_task(file_bytes: bytes, filename: str, task_id: str) -> dict[str, Any]:
     url = asyncio.run(upload_picture_to_cloudinary(file_bytes, filename, task_id)) or ""
     return {"file_url": url, "task_id": task_id}
 
-@celery.task(bind=True)
-def db_commit_file_annotation(self: Task, prev: dict[str, Any]) -> dict[str, Any]:
-    # async def _commit():
+@celery.task()
+def db_commit_file_annotation(prev: dict[str, Any]) -> dict[str, Any]:
     with Session(engine) as session:
         db_obj = FileAnnotation(
             task_id=prev["task_id"],
@@ -39,17 +37,16 @@ def db_commit_file_annotation(self: Task, prev: dict[str, Any]) -> dict[str, Any
         session.add(db_obj)
         session.commit()
     return prev
-    # return asyncio.run(_commit())
 
 vlm = ChatOllama(model="moondream:v2", base_url=settings.OLLAMA_BASE_URL)
 
-@celery.task(bind=True)
-def invoke_llm(self: Task, prev: dict[str, Any], prompt: str) -> dict[str, Any]:
+@celery.task()
+def invoke_llm(prev: dict[str, Any], prompt: str) -> dict[str, Any]:
     url = prev["file_url"]
     max_retries = 5
     image_bytes = None
 
-    for i in range(max_retries):
+    for _ in range(max_retries):
         try:
             resp = requests.get(url, timeout=5)
             if resp.status_code == 200:
@@ -80,9 +77,8 @@ def invoke_llm(self: Task, prev: dict[str, Any], prompt: str) -> dict[str, Any]:
     prev["annotation"] = annotation.model_dump()
     return prev
 
-@celery.task(bind=True)
-def update_file_annotation(self: Task, prev: dict[str, Any]) -> dict[str, Any]:
-    # async def _update():
+@celery.task()
+def update_file_annotation(prev: dict[str, Any]) -> dict[str, Any]:
     with Session(engine) as session:
         stmt = select(FileAnnotation).where(FileAnnotation.task_id == prev["task_id"])
         result = session.exec(stmt)
@@ -92,10 +88,9 @@ def update_file_annotation(self: Task, prev: dict[str, Any]) -> dict[str, Any]:
         file.sqlmodel_update({"annotation": prev["annotation"].get("content")})
         session.commit()
     return prev
-    # return asyncio.run(_update())
 
-@celery.task(bind=True)
-def send_email_task(self: Task, prev: dict[str, Any], email: str) -> str:
+@celery.task()
+def send_email_task(prev: dict[str, Any], email: str) -> str:
     async def _send():
         link = f"{settings.FRONTEND_HOST}/results/{prev['task_id']}"
         content = generate_reminder_email(email_to=email, link=link)

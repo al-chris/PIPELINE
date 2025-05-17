@@ -11,7 +11,7 @@ from fastapi.templating import Jinja2Templates
 from app.config import settings
 from app.tasks import full_annotation_flow
 from app.logging import logger
-from app.db import FileAnnotation, engine
+from app.db import FileAnnotation, engine, create_db_and_tables
 from sqlmodel import select, Session
 
 redis = Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB)
@@ -37,11 +37,11 @@ def encode_to_base64_string(image: Union[bytes, bytearray, memoryview]) -> str:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Initializing application")
-    # try:
-    #     await create_db_and_tables()
-    # except Exception as e:
-    #     logger.error(f"Failed to initialize the database: {e}")
-    #     raise
+    try:
+        create_db_and_tables()
+    except Exception as e:
+        logger.error(f"Failed to initialize the database: {e}")
+        raise
     yield
     logger.info("Shutting down application")
 

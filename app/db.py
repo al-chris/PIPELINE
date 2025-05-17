@@ -1,6 +1,6 @@
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import Generator
 from sqlmodel import SQLModel, Field, Session
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import create_engine
 from typing import Annotated, Optional
 from fastapi import Depends
@@ -35,6 +35,12 @@ SessionDep = Annotated[AsyncSession, Depends(get_db)]
 
 # async def create_db_and_tables():
 #     logger.info("Creating database tables")
-#     with engine.begin() as conn:
+#     async with engine.begin() as conn:
 #         conn.run_sync(SQLModel.metadata.create_all)
 #     logger.info("Database tables created")
+
+def create_db_and_tables():
+    logger.info("Creating database tables")
+    with engine.begin() as conn:
+        SQLModel.metadata.create_all(conn)
+    logger.info("Database tables created")
