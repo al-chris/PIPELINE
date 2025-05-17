@@ -8,12 +8,12 @@ ENV PYTHONUNBUFFERED=1
 # Set work directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    libpq-dev \
+# Install system dependencies (ALPINE VERSION)
+RUN apk update && apk add --no-cache \
+    build-base \
+    libpq \
     gcc \
-    && rm -rf /var/lib/apt/lists/*
+    postgresql-dev
 
 # Install pip and poetry
 RUN pip install --upgrade pip
