@@ -57,10 +57,30 @@ templates = Jinja2Templates(directory=templates_directory)
 
 @app.get('/')
 def main(request: Request) -> HTMLResponse:
+    """
+    Renders the main index page using a template.
+    Args:
+        request (Request): The FastAPI request object.
+    Returns:
+        HTMLResponse: The rendered template response containing the index page.
+    """
+
     return templates.TemplateResponse("index.html", {"request": request})
 
 @app.get("/results/{id}")
 def results(id: str, request: Request) -> HTMLResponse:
+    """
+    Renders the results page with the specified ID.
+    Args:
+        id (str): The unique identifier for the results to display.
+        request (Request): The FastAPI request object.
+    Returns:
+        HTMLResponse: The rendered HTML template response containing the results page.
+    Notes:
+        - Uses the 'results.html' template for rendering
+        - Passes the request and id to the template context
+    """
+
     return templates.TemplateResponse("results.html", context={"request": request, "id": id})
 
 
@@ -69,6 +89,26 @@ prompt = "What's in this image?"
 
 @app.post("/annotate")
 async def annotate(file: UploadFile, email: str = Body(...)) -> JSONResponse:
+    """
+    Asynchronously handles file annotation requests.
+    This endpoint receives a file and an email address, initiates the annotation process,
+    and returns a response with a tracking ID.
+    Args:
+        file (UploadFile): The file to be annotated, uploaded through FastAPI
+        email (str): Email address of the user requesting annotation, passed in request body
+    Returns:
+        JSONResponse: A JSON response containing:
+            - message: Status message indicating annotation has started
+            - id: Unique identifier for tracking the annotation process
+    Raises:
+        HTTPException: If file upload fails or file format is invalid
+    Example:
+        {
+            "message": "Annotation in progress",
+            "id": "66a3183c-969c-47c8-9039-26892c6bd911"
+        }
+    """
+
     file_bytes = await file.read()
     filename = file.filename or ""
 
@@ -79,6 +119,20 @@ async def annotate(file: UploadFile, email: str = Body(...)) -> JSONResponse:
 
 @app.get("/api/results/{id}")
 def api_results(id: str):
+    """
+    Retrieves annotation results for a specific task ID from the database.
+    Parameters:
+        id (str): The task ID to search for in the database.
+    Returns:
+        JSONResponse: A JSON response containing:
+            - annotation: The annotation data for the task (None if not found)
+            - file_url: The associated file URL (None if not found)
+            With status code 200 if found, 404 if not found.
+    Note:
+        Uses SQLModel Session to query the FileAnnotation table.
+        Returns 404 if no matching task_id is found.
+    """
+
     with Session(engine) as session:
         stmt = select(FileAnnotation).where(FileAnnotation.task_id == id)
         result = session.exec(stmt).first()
