@@ -1,6 +1,6 @@
 # PIPELINE
 
-![PIPELINE LOGO](docs/images/logo.svg)
+![PIPELINE LOGO](docs/images/logo.png)
 
 ## 1. Project Overview
 
