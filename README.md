@@ -1,5 +1,7 @@
 # PIPELINE
 
+![PIPELINE LOGO](docs/images/logo.svg)
+
 ## 1. Project Overview
 
 **PIPELINE** is an image annotation service that leverages **FastAPI** as a modern, async REST API backend and **Celery** for robust background task processing. Its primary goal is to allow users to upload images, automatically annotate them using advanced vision-language models (e.g., moondream:v2 via Ollama), and retrieve the results efficiently, with notification support via email.
